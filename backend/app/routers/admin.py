@@ -15,7 +15,9 @@ router = APIRouter(prefix="/api", tags=["meta"])
 @router.get("/health")
 def health():
     s = get_settings()
-    return {"status": "ok", "app": s.app_name, "ia": bool(s.anthropic_api_key)}
+    banco = "postgres" if s.sqlalchemy_url.startswith("postgresql") else "sqlite"
+    return {"status": "ok", "app": s.app_name, "versao": "0.2.0", "banco": banco,
+            "ia": bool(s.anthropic_api_key), "redis": bool(s.redis_url)}
 
 
 @router.get("/meta")
