@@ -1,0 +1,32 @@
+# Deploy automático na ShardCloud a cada push na main.
+# Configuração (uma vez só), em GitHub > Settings > Secrets and variables > Actions:
+#   - Secret   SHARD_CLOUD_API_KEY = chave da API (painel ShardCloud > Config > Integrations)
+#   - Variable SHARD_APP_ID        = ID do app empregoFacil (aparece na URL/configurações do app)
+name: Deploy na ShardCloud
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-shardcloud.yml"
+  workflow_dispatch: {}   # botão "Run workflow" para deploy manual
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Limpar arquivos que não vão para produção
+        run: |
+          rm -rf backend/tests backend/Dockerfile
+          find backend -name "__pycache__" -type d -prune -exec rm -rf {} +
+
+      - name: Enviar para a ShardCloud
+        uses: shard-cloud/action@main
+        with:
+          token: ${{ secrets.SHARD_CLOUD_API_KEY }}
+          workdir: ./backend
+          commands: app commit ${{ vars.SHARD_APP_ID }}
