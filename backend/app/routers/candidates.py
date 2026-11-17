@@ -1,10 +1,12 @@
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.ai import PERGUNTAS, gerar_curriculo
+from app.ai import CATEGORIAS, PERGUNTAS, gerar_curriculo
+from app.arquivos import TIPOS, categorias_do_texto, extrair_texto, identificar, organizar
 from app.database import get_db
 from app.geo import coords
 from app.models import CandidateProfile, Resume, User
@@ -72,6 +74,7 @@ def gerar(data: ResumeGenerateIn, user: User = Depends(candidato_only), db: Sess
     resume = prof.resume or Resume(candidate_id=prof.id)
     resume.respostas, resume.conteudo, resume.categorias = respostas, conteudo, categorias
     resume.gerado_por, resume.confirmado = motor, False
+    resume.origem, resume.usar_arquivo = "voz", False  # o arquivo enviado (se houver) continua guardado
     db.add(resume)
     db.commit()
     db.refresh(resume)
@@ -92,6 +95,110 @@ def editar(data: ResumeUpdateIn, user: User = Depends(candidato_only), db: Sessi
     db.commit()
     db.refresh(prof.resume)
     return prof.resume
+
+
+# ---------- currículo pronto (arquivo) ----------
+def _aplicar_organizado(resume: Resume, conteudo: dict, motor: str) -> None:
+    resume.categorias = conteudo.pop("categorias", []) or resume.categorias or []
+    resume.conteudo, resume.gerado_por = conteudo, motor
+    resume.origem, resume.usar_arquivo, resume.confirmado = "arquivo_atualizado", False, False
+
+
+@router.post("/curriculo/arquivo", response_model=ResumeOut)
+async def enviar_arquivo(
+    arquivo: UploadFile = File(...),
+    modo: str = Form(..., pattern="^(usar|atualizar)$"),
+    categorias: str = Form(""),
+    user: User = Depends(candidato_only),
+    db: Session = Depends(get_db),
+):
+    """modo=usar: a empresa recebe o arquivo como está. modo=atualizar: lemos e reorganizamos no modelo do app."""
+    dados = await arquivo.read(5 * 1024 * 1024 + 1)
+    nome_arq = (arquivo.filename or "curriculo").replace("/", "_")[-150:]
+    tipo = identificar(nome_arq, dados)
+    prof = get_profile(user, db)
+    resume = prof.resume or Resume(candidate_id=prof.id, respostas={}, conteudo={}, categorias=[])
+    escolhidas = [c for c in categorias.split(",") if c in CATEGORIAS]
+
+    if modo == "atualizar":
+        limitar(f"curriculo:{user.id}", maximo=10, janela_s=86400,
+                mensagem="Você já atualizou muitos currículos hoje. Edite o atual ou tente amanhã.")
+        conteudo, motor, _ = organizar(user.nome, tipo, dados)
+        _aplicar_organizado(resume, conteudo, motor)
+        if escolhidas:
+            resume.categorias = list(dict.fromkeys(escolhidas + resume.categorias))
+    else:
+        detectadas = categorias_do_texto(extrair_texto(tipo, dados))
+        resume.categorias = list(dict.fromkeys(escolhidas + detectadas))
+        if not resume.categorias:
+            raise HTTPException(422, "Escolha pelo menos uma área em que você quer trabalhar.")
+        if not resume.conteudo:  # mínimo para a empresa ver na lista
+            resume.conteudo = {"nome": user.nome, "objetivo": "", "resumo": "Currículo enviado em arquivo.",
+                               "experiencias": [], "habilidades": [], "formacao": "", "disponibilidade": ""}
+        resume.origem, resume.usar_arquivo, resume.confirmado = "arquivo", True, True
+        resume.gerado_por = resume.gerado_por or "arquivo"
+
+    resume.arquivo_nome, resume.arquivo_tipo, resume.arquivo_dados = nome_arq, TIPOS[tipo], dados
+    db.add(resume)
+    db.commit()
+    db.refresh(resume)
+    return resume
+
+
+@router.post("/curriculo/arquivo/atualizar", response_model=ResumeOut)
+def atualizar_arquivo_guardado(user: User = Depends(candidato_only), db: Session = Depends(get_db)):
+    """Quem escolheu 'usar como está' pode, depois, pedir para melhorar o mesmo arquivo."""
+    resume = get_profile(user, db).resume
+    if not resume or not resume.arquivo_dados:
+        raise HTTPException(404, "Nenhum arquivo enviado.")
+    limitar(f"curriculo:{user.id}", maximo=10, janela_s=86400,
+            mensagem="Você já atualizou muitos currículos hoje. Edite o atual ou tente amanhã.")
+    tipo = next(k for k, v in TIPOS.items() if v == resume.arquivo_tipo)
+    conteudo, motor, _ = organizar(user.nome, tipo, resume.arquivo_dados)
+    _aplicar_organizado(resume, conteudo, motor)
+    db.commit()
+    db.refresh(resume)
+    return resume
+
+
+@router.put("/curriculo/modo", response_model=ResumeOut)
+def escolher_modo(usar_arquivo: bool, user: User = Depends(candidato_only), db: Session = Depends(get_db)):
+    """Troca o que a empresa recebe: o arquivo original ou o currículo do Emprego Fácil."""
+    resume = get_profile(user, db).resume
+    if not resume:
+        raise HTTPException(404, "Você ainda não tem currículo.")
+    if usar_arquivo and not resume.arquivo_nome:
+        raise HTTPException(422, "Envie um arquivo primeiro.")
+    resume.usar_arquivo = usar_arquivo
+    db.commit()
+    db.refresh(resume)
+    return resume
+
+
+@router.get("/curriculo/arquivo")
+def baixar_meu_arquivo(user: User = Depends(candidato_only), db: Session = Depends(get_db)):
+    resume = get_profile(user, db).resume
+    if not resume or not resume.arquivo_dados:
+        raise HTTPException(404, "Nenhum arquivo enviado.")
+    return Response(resume.arquivo_dados, media_type=resume.arquivo_tipo,
+                    headers={"Content-Disposition": f'inline; filename="{resume.arquivo_nome}"'})
+
+
+@router.delete("/curriculo/arquivo", response_model=ResumeOut | None)
+def apagar_arquivo(user: User = Depends(candidato_only), db: Session = Depends(get_db)):
+    prof = get_profile(user, db)
+    resume = prof.resume
+    if not resume or not resume.arquivo_nome:
+        raise HTTPException(404, "Nenhum arquivo enviado.")
+    resume.arquivo_nome = resume.arquivo_tipo = resume.arquivo_dados = None
+    resume.usar_arquivo = False
+    if resume.origem == "arquivo":  # só existia o arquivo: apaga o currículo inteiro
+        db.delete(resume)
+        db.commit()
+        return None
+    db.commit()
+    db.refresh(resume)
+    return resume
 
 
 # ---------- parceiro social cadastra por alguém ----------

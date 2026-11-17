@@ -23,6 +23,13 @@ Stack (padrão da Base SaaS V1): **FastAPI + SQLAlchemy + PostgreSQL + Redis + R
 
 **Distância:** usa o centro aproximado de ~30 bairros/cidades da Grande Porto Alegre (`backend/app/geo.py`) ou a localização do celular, se a pessoa permitir.
 
+## Currículo pronto (arquivo)
+A primeira opção é sempre **fazer o currículo agora** (falando ou escrevendo): ninguém deixa de usar o app por não ter currículo. Quem já tem pode enviar **PDF, Word (.docx) ou foto** (até 5 MB) e escolher:
+- **Melhorar e atualizar:** o app lê o arquivo e organiza no modelo do Emprego Fácil; a pessoa confere, corrige e acrescenta. Com `ANTHROPIC_API_KEY` a IA lê PDF, Word e foto; sem ela, lê o texto de PDF/Word por regras (foto e PDF escaneado exigem a IA).
+- **Usar do jeito que está:** a empresa recebe o próprio arquivo; a pessoa marca as áreas para receber as vagas certas.
+- Dá para trocar entre os dois, melhorar depois o arquivo guardado ou apagá-lo. CPF, endereço e contatos do arquivo não são copiados para o currículo do app.
+- O arquivo fica no banco (não no disco, que pode ser apagado no deploy). A empresa só baixa o arquivo de quem se candidatou a uma vaga dela.
+
 ## Recuperação de senha
 - **Esqueci minha senha:** a pessoa recebe um código de 6 números no WhatsApp (contas de empresa: por e-mail). O código vale 15 minutos e é bloqueado após 5 erros. A tela sempre responde igual, exista a conta ou não.
 - **Parceiro (ONG/associação):** gera senha nova para quem ele mesmo cadastrou.

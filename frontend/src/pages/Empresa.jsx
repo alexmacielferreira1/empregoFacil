@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { api } from '../api'
+import { abrirArquivo, api } from '../api'
 import { useAuth } from '../auth'
 import { Plus, Users } from 'lucide-react'
 import { Campo, Carregando, Erro, SelectCategoria, SelectLocal, Selo } from '../components'
@@ -139,7 +139,10 @@ export function Candidatos() {
             </div>
           )}
           <div className="acoes">
-            <button className="secundario" onClick={() => setAberto(aberto === c.application_id ? null : c.application_id)}>{aberto === c.application_id ? 'Fechar' : 'Ver currículo'}</button>
+            {c.usar_arquivo
+              ? <button onClick={() => abrirArquivo(`/api/empresa/candidaturas/${c.application_id}/arquivo`, c.arquivo_nome).catch((e) => setErro(e.message))}>{/\.docx$/i.test(c.arquivo_nome || '') ? 'Baixar currículo' : 'Abrir currículo'}</button>
+              : <button className="secundario" onClick={() => setAberto(aberto === c.application_id ? null : c.application_id)}>{aberto === c.application_id ? 'Fechar' : 'Ver currículo'}</button>}
+            {!c.usar_arquivo && c.arquivo_nome && <button className="link" onClick={() => abrirArquivo(`/api/empresa/candidaturas/${c.application_id}/arquivo`, c.arquivo_nome).catch((e) => setErro(e.message))}>Arquivo original</button>}
             <select value={c.status} onChange={(e) => mudar(c.application_id, e.target.value)}>
               {c.status === 'enviada' && <option value="enviada">Nova</option>}
               {STATUS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}

@@ -212,3 +212,94 @@ def test_avisos_vaga_nova_e_status(client):
     adm = client.post("/api/auth/login", json={"login": "admin@empregofacil.app", "senha": "admin123"}).json()["access_token"]
     lista = client.get("/api/admin/avisos", headers=auth(adm)).json()
     assert lista and all(a["destino"].endswith("****") for a in lista)
+
+
+# ---------- currículo pronto (arquivo) ----------
+def _pdf_curriculo() -> bytes:
+    import io
+    from reportlab.pdfgen import canvas
+    buf = io.BytesIO(); c = canvas.Canvas(buf); y = 800
+    for linha in ["Carlos Souza", "CPF 123.456.789-00", "Rua das Flores, 10 - CEP 91000-000",
+                  "OBJETIVO", "Trabalhar como auxiliar de cozinha",
+                  "EXPERIÊNCIA", "Auxiliar de cozinha - Restaurante Bom Sabor (2 anos)",
+                  "Preparo de saladas, organização do estoque e limpeza da cozinha.",
+                  "Garçom - Lancheria do Centro (1 ano)",
+                  "FORMAÇÃO", "Ensino médio completo", "HABILIDADES", "Pontual, trabalho em equipe, organizado"]:
+        c.drawString(50, y, linha); y -= 22
+    c.save(); return buf.getvalue()
+
+
+def _docx_curriculo() -> bytes:
+    import io
+    import docx
+    d = docx.Document()
+    for linha in ["Joana Lima", "Experiência", "Costureira em confecção - 3 anos", "Formação", "Curso de corte e costura"]:
+        d.add_paragraph(linha)
+    buf = io.BytesIO(); d.save(buf); return buf.getvalue()
+
+
+def _novo_candidato(client, fone):
+    r = client.post("/api/auth/register", json={"nome": "Teste Arquivo", "login": fone, "senha": "1234",
+                                                "role": "candidato", "bairro": "Centro Histórico", "consentimento_lgpd": True})
+    return r.json()["access_token"]
+
+
+def test_enviar_pdf_e_atualizar(client):
+    tok = _novo_candidato(client, "51955550001")
+    r = client.post("/api/candidato/curriculo/arquivo", headers=auth(tok), data={"modo": "atualizar"},
+                    files={"arquivo": ("curriculo.pdf", _pdf_curriculo(), "application/pdf")})
+    assert r.status_code == 200, r.text
+    cv = r.json()
+    assert cv["origem"] == "arquivo_atualizado" and cv["usar_arquivo"] is False and cv["confirmado"] is False
+    assert "cozinha" in cv["categorias"]
+    c = cv["conteudo"]
+    assert c["experiencias"][0]["cargo"] == "Auxiliar de Cozinha"
+    assert "médio" in c["formacao"].lower()
+    texto = str(c)
+    assert "123.456.789" not in texto and "Rua das Flores" not in texto  # dados pessoais não são copiados
+    baixado = client.get("/api/candidato/curriculo/arquivo", headers=auth(tok))
+    assert baixado.status_code == 200 and baixado.content[:5] == b"%PDF-"
+
+
+def test_usar_docx_como_esta_e_empresa_baixa(client):
+    tok = _novo_candidato(client, "51955550002")
+    r = client.post("/api/candidato/curriculo/arquivo", headers=auth(tok), data={"modo": "usar", "categorias": "limpeza"},
+                    files={"arquivo": ("meu cv.docx", _docx_curriculo(), "application/octet-stream")})
+    assert r.status_code == 200, r.text
+    cv = r.json()
+    assert cv["usar_arquivo"] is True and cv["confirmado"] is True
+    assert set(cv["categorias"]) >= {"limpeza", "costura"}  # escolhida + detectada no texto
+    # pode se candidatar com o arquivo
+    vaga = client.get("/api/candidato/vagas", headers=auth(tok)).json()[0]
+    assert client.post(f"/api/vagas/{vaga['id']}/candidatar", headers=auth(tok)).status_code == 201
+    emp = client.post("/api/auth/login", json={"login": "empresa@demo.app", "senha": "demo123"}).json()["access_token"]
+    cand = next(c for c in client.get(f"/api/empresa/vagas/{vaga['id']}/candidatos", headers=auth(emp)).json()
+                if c["nome"] == "Teste Arquivo")
+    assert cand["usar_arquivo"] is True and cand["arquivo_nome"] == "meu cv.docx"
+    arq = client.get(f"/api/empresa/candidaturas/{cand['application_id']}/arquivo", headers=auth(emp))
+    assert arq.status_code == 200 and arq.content[:2] == b"PK"
+    # outra empresa / candidato não baixa
+    assert client.get(f"/api/empresa/candidaturas/{cand['application_id']}/arquivo", headers=auth(tok)).status_code == 403
+    # depois pede para melhorar o mesmo arquivo
+    r = client.post("/api/candidato/curriculo/arquivo/atualizar", headers=auth(tok))
+    assert r.status_code == 200 and r.json()["origem"] == "arquivo_atualizado"
+    assert r.json()["conteudo"]["experiencias"][0]["cargo"] == "Costureira(o)"
+    # e volta a mandar o arquivo original
+    assert client.put("/api/candidato/curriculo/modo?usar_arquivo=true", headers=auth(tok)).json()["usar_arquivo"] is True
+
+
+def test_arquivo_invalido_e_apagar(client):
+    tok = _novo_candidato(client, "51955550003")
+    enviar = lambda nome, dados, modo="usar", cats="limpeza": client.post(
+        "/api/candidato/curriculo/arquivo", headers=auth(tok), data={"modo": modo, "categorias": cats},
+        files={"arquivo": (nome, dados, "application/octet-stream")})
+    assert enviar("virus.exe", b"MZ\x90\x00").status_code == 422
+    assert enviar("antigo.doc", b"\xd0\xcf\x11\xe0").status_code == 422
+    assert enviar("grande.pdf", b"%PDF-" + b"0" * (5 * 1024 * 1024)).status_code == 413
+    foto = b"\xff\xd8\xff\xe0" + b"0" * 100
+    assert enviar("foto.jpg", foto, modo="atualizar").status_code == 422  # sem IA não lê foto
+    assert enviar("foto.jpg", foto, cats="").status_code == 422          # usar sem área
+    assert enviar("foto.jpg", foto).status_code == 200                    # usar com área: ok
+    r = client.delete("/api/candidato/curriculo/arquivo", headers=auth(tok))
+    assert r.status_code == 200 and r.json() is None  # só existia o arquivo: currículo apagado
+    assert client.get("/api/candidato/curriculo", headers=auth(tok)).json() is None

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -228,9 +229,23 @@ def candidatos_da_vaga(job_id: int, user: User = Depends(empresa), db: Session =
             nome=p.user.nome, telefone=p.telefone, bairro=p.bairro,  # endereço exato nunca é exposto
             distancia_km=distancia_km(p.lat, p.lng, j.lat, j.lng),
             curriculo=p.resume.conteudo if p.resume else None,
+            arquivo_nome=p.resume.arquivo_nome if p.resume else None,
+            usar_arquivo=bool(p.resume and p.resume.usar_arquivo and p.resume.arquivo_nome),
         ))
     db.commit()
     return out
+
+
+@router.get("/empresa/candidaturas/{app_id}/arquivo")
+def baixar_curriculo_candidato(app_id: int, user: User = Depends(empresa), db: Session = Depends(get_db)):
+    """A empresa só baixa o arquivo de quem se candidatou a uma vaga DELA."""
+    comp = _company(user, db)
+    a = db.get(Application, app_id)
+    if not a or a.job.company_id != comp.id or not a.candidate.resume or not a.candidate.resume.arquivo_dados:
+        raise HTTPException(404, "Arquivo não encontrado")
+    r = a.candidate.resume
+    return Response(r.arquivo_dados, media_type=r.arquivo_tipo,
+                    headers={"Content-Disposition": f'inline; filename="{r.arquivo_nome}"'})
 
 
 @router.put("/empresa/candidaturas/{app_id}", response_model=ApplicationOut)

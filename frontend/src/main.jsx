@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, homeDe, useAuth } from './auth'
 import { Layout } from './components'
-import Curriculo from './pages/Curriculo'
+import Curriculo, { EnviarCurriculo } from './pages/Curriculo'
 import { Cursos, Inicio, Perfil, Vagas } from './pages/Candidato'
 import { Candidatos, EmpresaVagas, VagaForm } from './pages/Empresa'
 import Entrevista from './pages/Entrevista'
@@ -37,6 +37,7 @@ function App() {
         <Route path="/inicio" element={<Protegida roles={['candidato']}><Inicio /></Protegida>} />
         <Route path="/entrevista" element={<Protegida roles={['candidato']}><Entrevista /></Protegida>} />
         <Route path="/curriculo" element={<Protegida roles={['candidato']}><Curriculo /></Protegida>} />
+        <Route path="/curriculo/enviar" element={<Protegida roles={['candidato']}><EnviarCurriculo /></Protegida>} />
         <Route path="/perfil" element={<Protegida roles={['candidato']}><Perfil /></Protegida>} />
 
         <Route path="/empresa" element={<Protegida roles={['empresa']}><EmpresaVagas /></Protegida>} />

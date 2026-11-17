@@ -34,7 +34,7 @@ export function Layout({ children }) {
   const menu = user ? MENUS[user.role] || [] : []
   const ehCandidato = user?.role === 'candidato'
   // "Currículo" fica ativo também durante a entrevista
-  const ativo = (to) => pathname === to || (to === '/curriculo' && pathname === '/entrevista')
+  const ativo = (to) => pathname === to || (to === '/curriculo' && (pathname === '/entrevista' || pathname.startsWith('/curriculo')))
 
   return (
     <div className={`app ${menu.length ? 'com-menu' : ''}`}>

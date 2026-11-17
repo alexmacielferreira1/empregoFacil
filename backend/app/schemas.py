@@ -91,6 +91,9 @@ class ResumeOut(Orm):
     gerado_por: str
     confirmado: bool
     updated_at: datetime
+    origem: str | None = None
+    arquivo_nome: str | None = None
+    usar_arquivo: bool | None = None
 
 
 class PartnerCandidateIn(BaseModel):
@@ -213,3 +216,5 @@ class ApplicantOut(BaseModel):
     bairro: str | None
     distancia_km: float | None
     curriculo: dict | None
+    arquivo_nome: str | None = None
+    usar_arquivo: bool = False

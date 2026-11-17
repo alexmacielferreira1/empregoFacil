@@ -44,3 +44,33 @@ export async function api(path, { method = 'GET', body, params } = {}) {
 }
 
 export const brl = (v) => (v === 0 ? 'Grátis' : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }))
+
+// Envio de arquivo (multipart). Não define Content-Type: o navegador coloca o boundary.
+export async function enviarArquivo(path, campos) {
+  const fd = new FormData()
+  Object.entries(campos).forEach(([k, v]) => fd.append(k, v))
+  const headers = {}
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(BASE + path, { method: 'POST', headers, body: fd })
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.detail && !Array.isArray(data.detail) ? data.detail : 'Não foi possível enviar o arquivo.')
+  return data
+}
+
+// Abre um arquivo protegido (precisa do token): PDF e foto numa aba nova; Word é baixado.
+export async function abrirArquivo(path, nome = '') {
+  const baixar = /\.docx$/i.test(nome)
+  const aba = baixar ? null : window.open('', '_blank') // abre já no clique, senão o navegador bloqueia
+  const headers = {}
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  const res = await fetch(BASE + path, { headers })
+  if (!res.ok) { aba?.close(); throw new Error('Não foi possível abrir o arquivo.') }
+  const url = URL.createObjectURL(await res.blob())
+  if (baixar || !aba) {
+    const a = document.createElement('a')
+    a.href = url; a.download = nome || 'curriculo'; document.body.appendChild(a); a.click(); a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 10000)
+  } else aba.location.href = url
+}

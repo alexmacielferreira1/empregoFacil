@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, LargeBinary, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -59,6 +59,13 @@ class Resume(Base):
     categorias: Mapped[list] = mapped_column(JSON, default=list)
     gerado_por: Mapped[str] = mapped_column(String(20), default="regras")  # "ia" ou "regras"
     confirmado: Mapped[bool] = mapped_column(Boolean, default=False)
+    # De onde veio: voz | arquivo (usado como está) | arquivo_atualizado (lido e reorganizado)
+    origem: Mapped[str | None] = mapped_column(String(20), nullable=True, default="voz")
+    # Arquivo enviado pela pessoa (guardado no banco: a hospedagem pode apagar arquivos no deploy)
+    arquivo_nome: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    arquivo_tipo: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    arquivo_dados: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
+    usar_arquivo: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=False)  # empresa recebe o arquivo
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
 
     candidate: Mapped[CandidateProfile] = relationship(back_populates="resume")

@@ -163,6 +163,26 @@ textarea { min-height: 96px; resize: vertical; }
 .painel-mic .rotulo { font-weight: 800; font-size: 1.15rem; margin: .9rem 0 0; }
 @keyframes pulso { 0%, 100% { box-shadow: 0 0 0 0 rgba(180, 35, 24, .35); } 50% { box-shadow: 0 0 0 16px rgba(180, 35, 24, 0); } }
 
+/* ---------- currículo: escolha e envio ---------- */
+.opcao-principal { display: flex; align-items: center; gap: 1rem; background: var(--azul); color: #fff; border-radius: 20px; padding: 1.3rem 1.2rem; text-decoration: none; margin: 1rem 0 .4rem; box-shadow: 0 6px 18px rgba(15, 71, 98, .25); }
+.opcao-principal:hover { background: var(--azul-escuro); }
+.opcao-principal b { display: block; font-size: 1.3rem; line-height: 1.2; }
+.opcao-principal small { display: block; font-size: .98rem; font-weight: 500; opacity: .9; margin-top: .2rem; }
+.opcao-icone { width: 64px; height: 64px; border-radius: 50%; background: var(--amarelo-forte); color: var(--azul-escuro); display: grid; place-items: center; flex: none; }
+.ou { display: flex; align-items: center; gap: .8rem; color: var(--quieto); margin: .9rem 0; }
+.ou::before, .ou::after { content: ''; flex: 1; height: 1px; background: var(--borda); }
+.area-arquivo { width: 100%; min-height: 150px; flex-direction: column; gap: .35rem; background: #fff; color: var(--azul); border: 2px dashed var(--azul-borda); border-radius: 18px; white-space: normal; text-align: center; }
+.area-arquivo:hover { background: var(--azul-claro); border-color: var(--azul); }
+.area-arquivo b { font-size: 1.08rem; color: var(--texto); word-break: break-word; }
+.area-arquivo small { color: var(--quieto); font-weight: 500; }
+.opcao { display: flex; gap: .8rem; align-items: flex-start; background: #fff; border: 2px solid var(--borda); border-radius: 16px; padding: .9rem 1rem; cursor: pointer; }
+.opcao input { width: 22px; height: 22px; margin-top: 2px; flex: none; accent-color: var(--azul); }
+.opcao b { display: flex; align-items: center; gap: .35rem; font-size: 1.05rem; }
+.opcao small { display: block; color: var(--quieto); font-size: .93rem; margin-top: .2rem; }
+.opcao.ativa { border-color: var(--azul); background: var(--azul-claro); }
+.arquivo-ativo { border: 2px solid var(--azul); }
+.link svg { vertical-align: -3px; margin-right: .2rem; }
+
 /* ---------- perfil ---------- */
 .perfil-topo { display: flex; align-items: center; gap: 1rem; margin: .3rem 0 1.2rem; }
 .avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--amarelo); color: var(--azul); display: grid; place-items: center; font-size: 1.6rem; font-weight: 800; flex: none; }

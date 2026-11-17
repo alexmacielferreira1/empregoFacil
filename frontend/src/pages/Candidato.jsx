@@ -38,7 +38,7 @@ export function Inicio() {
   }, [])
 
   const banner = cv === undefined ? null : !cv
-    ? { titulo: 'Monte seu currículo', texto: 'Responda algumas perguntas falando. A gente escreve o currículo para você.', botao: 'Começar agora', to: '/entrevista' }
+    ? { titulo: 'Monte seu currículo', texto: 'Não tem currículo? Sem problema. Responda algumas perguntas, falando ou escrevendo, e a gente monta para você.', botao: 'Começar agora', to: '/entrevista' }
     : !cv.confirmado
       ? { titulo: 'Confira seu currículo', texto: 'Ouça ou leia com calma e confirme se está tudo certo.', botao: 'Conferir currículo', to: '/curriculo' }
       : { titulo: 'Revise seu currículo', texto: 'Deixe seus dados atualizados para aumentar suas chances de conseguir uma vaga.', botao: 'Conferir currículo', to: '/curriculo' }
@@ -52,6 +52,7 @@ export function Inicio() {
             <h2>{banner.titulo}</h2>
             <p>{banner.texto}</p>
             <Link to={banner.to} className="botao">{banner.botao} <ArrowRight size={20} /></Link>
+            {!cv && <p style={{ margin: '.8rem 0 0', fontSize: '.92rem' }}><Link to="/curriculo/enviar">Já tenho um currículo pronto</Link></p>}
           </div>
           <IlustracaoCurriculo />
         </section>
