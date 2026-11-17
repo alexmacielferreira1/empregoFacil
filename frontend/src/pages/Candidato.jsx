@@ -8,13 +8,13 @@ import { Campo, Carregando, CursoCard, Erro, Interruptor, SelectCategoria, Selec
 function IlustracaoCurriculo() {
   return (
     <svg className="banner-ilustracao" viewBox="0 0 120 120" aria-hidden>
-      <g stroke="#0d3d6b" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+      <g stroke="#0f4762" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M86 14l5-8M96 22l9-4M98 34h8" fill="none" />
         <path d="M24 26l52-10 14 12 6 66-62 12z" fill="#fff" transform="rotate(-6 60 60)" />
         <path d="M38 46h34M38 58h38M38 70h30M38 82h22" fill="none" transform="rotate(-6 60 60)" />
       </g>
-      <circle cx="88" cy="88" r="17" fill="#2b7bd4" stroke="#0d3d6b" strokeWidth="3.5" />
-      <path d="M80 88l6 6 11-12" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="88" cy="88" r="17" fill="#eab749" stroke="#0f4762" strokeWidth="3.5" />
+      <path d="M80 88l6 6 11-12" fill="none" stroke="#0f4762" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

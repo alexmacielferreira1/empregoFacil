@@ -39,7 +39,7 @@ export function Layout({ children }) {
   return (
     <div className={`app ${menu.length ? 'com-menu' : ''}`}>
       <header className="topo">
-        <Link to="/" className="marca"><span className="marca-icone"><Briefcase size={22} strokeWidth={2} /></span>Emprego Fácil</Link>
+        <Link to="/" className="marca" aria-label="Emprego Fácil, início"><img src="/logo.svg" alt="Emprego Fácil" width="166" height="34" /></Link>
         {!user && <Link to="/entrar" className="link-entrar">Entrar</Link>}
         {ehCandidato && (pathname === '/perfil'
           ? <button className="topo-acao" onClick={sair} aria-label="Sair da conta" title="Sair"><LogOut size={24} /></button>

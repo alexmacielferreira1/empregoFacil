@@ -9,6 +9,7 @@ export function Home() {
   return (
     <div className="home">
       <section className="hero">
+        <img className="hero-simbolo" src="/simbolo.svg" alt="" />
         <h1>Seu currículo pronto <span>só falando</span>.</h1>
         <p>Conte o que você já fez. A gente transforma em currículo, mostra cursos baratos e vagas perto da sua casa.</p>
         <Link to="/cadastro?tipo=candidato" className="botao grande"><Mic size={22} />Quero trabalhar</Link>
