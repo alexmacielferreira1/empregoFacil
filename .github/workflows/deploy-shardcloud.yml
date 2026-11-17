@@ -38,4 +38,6 @@ jobs:
         with:
           token: ${{ secrets.SHARD_CLOUD_API_KEY }}
           workdir: ./backend
-          commands: app commit ${{ env.APP_ID }}
+          commands: |
+            app commit ${{ env.APP_ID }}
+            app restart ${{ env.APP_ID }}
