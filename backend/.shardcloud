@@ -1,0 +1,6 @@
+DISPLAY_NAME=empregoFacil
+DESCRIPTION=Curriculo por voz com IA, cursos baratos e vagas perto de casa
+MAIN=main.py
+MEMORY=512
+VERSION=recommended
+SUBDOMAIN=empregofacil

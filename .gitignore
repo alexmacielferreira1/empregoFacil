@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.db
+
+# Node
+node_modules/
+frontend/dist/
+
+# Build do frontend dentro do backend é gerado pelo build.sh / build.ps1
+# (deixe comentado se for usar a integração Git da ShardCloud, que precisa dele no repositório)
+# backend/static/
+
+# Pacote de deploy
+dist/
+*.zip
+
+# Segredos
+.env
