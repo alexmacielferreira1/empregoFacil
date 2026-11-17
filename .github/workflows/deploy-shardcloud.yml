@@ -1,7 +1,8 @@
 # Deploy automático na ShardCloud a cada push na main.
 # Configuração (uma vez só), em GitHub > Settings > Secrets and variables > Actions:
 #   - Secret   SHARD_CLOUD_API_KEY = chave da API (painel ShardCloud > Config > Integrations)
-#   - Variable SHARD_APP_ID        = ID do app empregoFacil (aparece na URL/configurações do app)
+#   - SHARD_APP_ID = ID do app empregoFacil (aparece na URL/configurações do app).
+#     Pode ser cadastrado como Variable ou como Secret.
 name: Deploy na ShardCloud
 
 on:
@@ -15,7 +16,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      APP_ID: ${{ vars.SHARD_APP_ID || secrets.SHARD_APP_ID }}
     steps:
+      - name: Conferir configuração
+        run: |
+          if [ -z "$APP_ID" ]; then
+            echo "::error::Falta SHARD_APP_ID (Settings > Secrets and variables > Actions)."; exit 1
+          fi
+
       - name: Baixar o código
         uses: actions/checkout@v4
 
@@ -29,4 +38,4 @@ jobs:
         with:
           token: ${{ secrets.SHARD_CLOUD_API_KEY }}
           workdir: ./backend
-          commands: app commit ${{ vars.SHARD_APP_ID }}
+          commands: app commit ${{ env.APP_ID }}
