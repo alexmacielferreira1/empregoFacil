@@ -41,6 +41,8 @@ class CandidateProfile(Base):
     lng: Mapped[float | None] = mapped_column(Float, nullable=True)
     disponibilidade: Mapped[str | None] = mapped_column(String(200), nullable=True)
     consentimento_lgpd: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Avisos no WhatsApp (opt-in). Nulo em contas antigas = não recebe até a pessoa ligar.
+    avisos_whatsapp: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
 
     user: Mapped[User] = relationship(back_populates="candidate")
@@ -146,3 +148,33 @@ class Application(Base):
 
     job: Mapped[Job] = relationship(back_populates="applications")
     candidate: Mapped[CandidateProfile] = relationship()
+
+
+class PasswordReset(Base):
+    """Código de recuperação de senha. Guardamos só o hash do código."""
+    __tablename__ = "password_resets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    code_hash: Mapped[str] = mapped_column(String(200))
+    canal: Mapped[str] = mapped_column(String(20))  # whatsapp | email
+    expira_em: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    tentativas: Mapped[int] = mapped_column(Integer, default=0)
+    usado: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class Notificacao(Base):
+    """Registro de cada aviso enviado (ou que falhou). Nunca guarda códigos de senha."""
+    __tablename__ = "notificacoes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
+    canal: Mapped[str] = mapped_column(String(20))   # whatsapp | email
+    tipo: Mapped[str] = mapped_column(String(30), index=True)  # codigo | vaga_nova | status
+    destino: Mapped[str] = mapped_column(String(120))
+    resumo: Mapped[str] = mapped_column(String(300))
+    referencia_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # vaga ou candidatura
+    status: Mapped[str] = mapped_column(String(20))  # enviado | falhou | simulado
+    erro: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, index=True)

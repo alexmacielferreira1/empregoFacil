@@ -23,6 +23,35 @@ Stack (padrão da Base SaaS V1): **FastAPI + SQLAlchemy + PostgreSQL + Redis + R
 
 **Distância:** usa o centro aproximado de ~30 bairros/cidades da Grande Porto Alegre (`backend/app/geo.py`) ou a localização do celular, se a pessoa permitir.
 
+## Recuperação de senha
+- **Esqueci minha senha:** a pessoa recebe um código de 6 números no WhatsApp (contas de empresa: por e-mail). O código vale 15 minutos e é bloqueado após 5 erros. A tela sempre responde igual, exista a conta ou não.
+- **Parceiro (ONG/associação):** gera senha nova para quem ele mesmo cadastrou.
+- **Admin:** gera senha nova para qualquer usuário, menos o admin (a senha do admin vem de `ADMIN_PASSWORD`).
+- O login tem limite de tentativas (10 por conta a cada 15 min).
+
+## Avisos por WhatsApp
+- **Vaga nova perto:** quando uma empresa publica (ou reabre) uma vaga, avisa quem tem currículo na mesma área e mora até `AVISO_RAIO_KM` (padrão 10 km). No máximo `AVISO_VAGAS_POR_DIA` avisos de vaga por pessoa por dia, e nunca a mesma vaga duas vezes.
+- **Candidatura:** avisa quando a empresa chama para entrevista, contrata ou encerra.
+- A pessoa liga/desliga os avisos no cadastro e no Perfil. O admin vê os últimos envios no Painel (telefone mascarado).
+- Vagas de exemplo nunca geram aviso.
+
+### Como ligar o envio de verdade
+Sem configurar nada, `WHATSAPP_PROVIDER=console`: nada é enviado, as mensagens (e os códigos) aparecem só no **log do servidor**. Bom para testar.
+
+**Opção A — API oficial do WhatsApp (Meta), recomendada para produção**
+1. Em business.facebook.com, crie um app do tipo Business com o produto WhatsApp e cadastre um número.
+2. Pegue o *token permanente* (usuário do sistema) e o *Phone number ID*.
+3. No WhatsApp Manager, crie e aguarde aprovar 3 modelos em português (pt_BR):
+   - `empregofacil_codigo` — categoria **Autenticação**, botão "copiar código".
+   - `empregofacil_vaga_nova` — categoria Utilidade. Texto sugerido: `Olá, {{1}}! Tem vaga nova perto de você: {{2}}, em {{3}}. Veja e se candidate: {{4}}`
+   - `empregofacil_status` — categoria Utilidade. Texto sugerido: `Olá, {{1}}! Novidade na sua candidatura para {{2}} ({{3}}): {{4}}`
+4. Na ShardCloud: `WHATSAPP_PROVIDER=meta`, `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_NUMBER_ID`.
+
+**Opção B — Z-API (mais rápido para testar, não é a API oficial)**
+Crie uma instância em z-api.io, leia o QR Code com o WhatsApp do projeto e defina `WHATSAPP_PROVIDER=zapi`, `ZAPI_INSTANCE`, `ZAPI_TOKEN` e `ZAPI_CLIENT_TOKEN`. Use um número exclusivo do projeto: APIs não oficiais podem levar o número a ser bloqueado.
+
+**E-mail (empresas):** preencha `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` e `SMTP_FROM`. Sem isso, o código das empresas também vai só para o log.
+
 ## Rodar no PC
 
 ### Com Docker (Postgres + Redis, igual à Base)

@@ -198,7 +198,7 @@ textarea { min-height: 96px; resize: vertical; }
 .numeros div { background: #fff; border: 1px solid var(--borda); border-radius: 14px; padding: .8rem; text-align: center; display: flex; flex-direction: column; }
 .numeros b { font-size: 1.7rem; color: var(--azul); }
 .numeros span { font-size: .8rem; color: var(--quieto); }
-.tabela { width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: .8rem; background: #fff; border-radius: 12px; overflow: hidden; }
+.tabela { width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: .8rem; background: #fff; border-radius: 12px; display: block; overflow-x: auto; }
 .tabela th, .tabela td { text-align: left; padding: .6rem; border-bottom: 1px solid var(--borda); vertical-align: top; }
 .lista { list-style: none; padding: 0; margin: 0; }
 .lista li { background: #fff; border: 1px solid var(--borda); border-radius: 14px; padding: .8rem 1rem; margin: .5rem 0; }

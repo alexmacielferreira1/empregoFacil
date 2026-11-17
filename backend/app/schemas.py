@@ -18,11 +18,22 @@ class RegisterIn(BaseModel):
     razao_social: str | None = None
     cnpj: str | None = None
     consentimento_lgpd: bool = False
+    avisos_whatsapp: bool = True
 
 
 class LoginIn(BaseModel):
     login: str
     senha: str
+
+
+class EsqueciIn(BaseModel):
+    login: str = Field(min_length=4, max_length=120)
+
+
+class RedefinirIn(BaseModel):
+    login: str = Field(min_length=4, max_length=120)
+    codigo: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
+    nova_senha: str = Field(min_length=4, max_length=72)
 
 
 class UserOut(Orm):
@@ -48,6 +59,7 @@ class ProfileIn(BaseModel):
     lng: float | None = None
     disponibilidade: str | None = None
     consentimento_lgpd: bool | None = None
+    avisos_whatsapp: bool | None = None
 
 
 class ProfileOut(Orm):
@@ -59,6 +71,7 @@ class ProfileOut(Orm):
     lng: float | None
     disponibilidade: str | None
     consentimento_lgpd: bool
+    avisos_whatsapp: bool | None = None
 
 
 class ResumeGenerateIn(BaseModel):

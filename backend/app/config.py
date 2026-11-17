@@ -29,6 +29,34 @@ class Settings(BaseSettings):
 
     cors_origins: str = "*"
     port: int = 80
+    app_url: str = "https://empregofacil.shardweb.app"  # usado nos links das mensagens
+
+    # ---------- WhatsApp ----------
+    # console = só registra no log (padrão, para testes) | meta = WhatsApp Cloud API oficial | zapi = Z-API
+    whatsapp_provider: str = "console"
+    # Meta (WhatsApp Cloud API)
+    whatsapp_token: str | None = None
+    whatsapp_phone_number_id: str | None = None
+    whatsapp_api_version: str = "v21.0"
+    whatsapp_idioma: str = "pt_BR"
+    whatsapp_tpl_codigo: str = "empregofacil_codigo"   # modelo de AUTENTICAÇÃO (botão copiar código)
+    whatsapp_tpl_vaga: str = "empregofacil_vaga_nova"  # {{1}} nome {{2}} vaga {{3}} bairro {{4}} link
+    whatsapp_tpl_status: str = "empregofacil_status"   # {{1}} nome {{2}} vaga {{3}} empresa {{4}} situação
+    # Z-API
+    zapi_instance: str | None = None
+    zapi_token: str | None = None
+    zapi_client_token: str | None = None
+
+    # ---------- E-mail (recuperação de senha de empresas) ----------
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str | None = None
+
+    # ---------- Avisos ----------
+    aviso_raio_km: float = 10
+    aviso_vagas_por_dia: int = 2  # máximo de avisos de vaga nova por pessoa por dia
 
     @property
     def sqlalchemy_url(self) -> str:

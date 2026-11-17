@@ -8,7 +8,7 @@ import { Cursos, Inicio, Perfil, Vagas } from './pages/Candidato'
 import { Candidatos, EmpresaVagas, VagaForm } from './pages/Empresa'
 import Entrevista from './pages/Entrevista'
 import { Admin, AdminCursos, Parceiro } from './pages/Gestao'
-import { Cadastro, Entrar, Home } from './pages/Publico'
+import { Cadastro, Entrar, Home, Recuperar } from './pages/Publico'
 import './styles.css'
 
 function Protegida({ roles, children }) {
@@ -30,6 +30,7 @@ function App() {
         <Route path="/" element={<Raiz />} />
         <Route path="/entrar" element={<Entrar />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/recuperar" element={<Recuperar />} />
         <Route path="/vagas" element={<Vagas />} />
         <Route path="/cursos" element={<Cursos />} />
 

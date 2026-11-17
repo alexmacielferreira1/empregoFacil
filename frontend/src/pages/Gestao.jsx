@@ -11,6 +11,12 @@ export function Parceiro() {
   const carregar = () => api('/api/parceiro/candidatos').then(setLista).catch((e) => setErro(e.message))
   useEffect(() => { carregar() }, [])
 
+  async function novaSenha(id) {
+    setErro(''); setCriado(null)
+    try { const r = await api(`/api/parceiro/candidatos/${id}/nova-senha`, { method: 'POST' }); setCriado({ ...r, nova: true }); window.scrollTo(0, 0) }
+    catch (e) { setErro(e.message) }
+  }
+
   async function enviar(e) {
     e.preventDefault(); setErro(''); setCriado(null)
     try {
@@ -33,14 +39,19 @@ export function Parceiro() {
       </form>
       {criado && (
         <div className="caixa-destaque ok">
-          <p className="sucesso">{criado.nome} foi cadastrada.</p>
+          <p className="sucesso">{criado.nova ? `Senha nova de ${criado.nome}` : `${criado.nome} foi cadastrada.`}</p>
           <p>Login: <b>{criado.login}</b> · Senha provisória: <b>{criado.senha_provisoria}</b></p>
           <p className="quieto">Anote e entregue para a pessoa. Ela pode trocar depois.</p>
         </div>
       )}
       <h2>Pessoas que você cadastrou</h2>
       {lista === null ? <Carregando /> : lista.length === 0 ? <p className="quieto">Ninguém ainda.</p> : (
-        <ul className="lista">{lista.map((p) => <li key={p.id}><b>{p.nome}</b> · {p.login} · {p.bairro || '—'} {p.tem_curriculo ? <Selo tipo="bom">Tem currículo</Selo> : <Selo>Sem currículo</Selo>}</li>)}</ul>
+        <ul className="lista">{lista.map((p) => (
+          <li key={p.id}>
+            <b>{p.nome}</b> · {p.login} · {p.bairro || '—'} {p.tem_curriculo ? <Selo tipo="bom">Tem currículo</Selo> : <Selo>Sem currículo</Selo>}
+            <br /><button className="link" onClick={() => novaSenha(p.id)}>Gerar senha nova</button>
+          </li>
+        ))}</ul>
       )}
     </div>
   )
@@ -49,21 +60,37 @@ export function Parceiro() {
 export function Admin() {
   const [r, setR] = useState(null)
   const [users, setUsers] = useState([])
+  const [avisos, setAvisos] = useState([])
+  const [senha, setSenha] = useState(null)
   const [erro, setErro] = useState('')
   useEffect(() => {
     api('/api/admin/resumo').then(setR).catch((e) => setErro(e.message))
     api('/api/admin/usuarios').then(setUsers).catch(() => {})
+    api('/api/admin/avisos').then(setAvisos).catch(() => {})
   }, [])
+  async function novaSenha(id) {
+    setErro('')
+    try { setSenha(await api(`/api/admin/usuarios/${id}/nova-senha`, { method: 'POST' })); window.scrollTo(0, 0) } catch (e) { setErro(e.message) }
+  }
   const ROT = { candidatos: 'Candidatos', curriculos: 'Currículos', empresas: 'Empresas', parceiros: 'Parceiros', vagas_abertas: 'Vagas abertas',
-    vagas_com_treinamento: 'Vagas com treino', cursos: 'Cursos', candidaturas: 'Candidaturas', contratados: 'Contratados' }
+    vagas_com_treinamento: 'Vagas com treino', cursos: 'Cursos', candidaturas: 'Candidaturas', contratados: 'Contratados',
+    avisos_whatsapp: 'Avisos WhatsApp', avisos_falharam: 'Avisos com falha' }
   return (
     <div>
       <h1>Painel</h1>
       <Erro msg={erro} />
+      {senha && <div className="caixa-destaque ok"><p className="sucesso">Senha nova de {senha.nome}</p><p>Login: <b>{senha.login}</b> · Senha provisória: <b>{senha.senha_provisoria}</b></p></div>}
       {!r ? <Carregando /> : <div className="numeros">{Object.entries(ROT).map(([k, l]) => <div key={k}><b>{r[k]}</b><span>{l}</span></div>)}</div>}
       <h2>Últimos usuários</h2>
-      <table className="tabela"><thead><tr><th>Nome</th><th>Login</th><th>Tipo</th></tr></thead>
-        <tbody>{users.map((u) => <tr key={u.id}><td>{u.nome}</td><td>{u.login}</td><td>{u.role}</td></tr>)}</tbody></table>
+      <table className="tabela"><thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th></th></tr></thead>
+        <tbody>{users.map((u) => <tr key={u.id}><td>{u.nome}</td><td>{u.login}</td><td>{u.role}</td>
+          <td>{u.role !== 'admin' && <button className="link" onClick={() => novaSenha(u.id)}>Nova senha</button>}</td></tr>)}</tbody></table>
+      <h2>Últimos avisos</h2>
+      {avisos.length === 0 ? <p className="quieto">Nenhum aviso enviado ainda.</p> : (
+        <table className="tabela"><thead><tr><th>Aviso</th><th>Para</th><th>Situação</th></tr></thead>
+          <tbody>{avisos.map((a) => <tr key={a.id}><td>{a.resumo}<br /><span className="quieto">{a.tipo} · {new Date(a.created_at).toLocaleString('pt-BR')}</span></td>
+            <td>{a.destino}</td><td>{a.status}{a.erro ? <><br /><span className="quieto">{a.erro}</span></> : null}</td></tr>)}</tbody></table>
+      )}
     </div>
   )
 }

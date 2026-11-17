@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -7,6 +7,7 @@ from app.ai import CATEGORIAS
 from app.database import get_db
 from app.geo import coords, distancia_km
 from app.models import Application, CandidateProfile, Company, Course, Job, User
+from app.notificacoes import avisar_status, avisar_vaga_nova
 from app.routers.courses import course_out
 from app.schemas import ApplicantOut, ApplicationIn, ApplicationOut, ApplicationStatusIn, JobIn, JobOut
 from app.security import require_role
@@ -182,7 +183,7 @@ def minhas_vagas(user: User = Depends(empresa), db: Session = Depends(get_db)):
 
 
 @router.post("/empresa/vagas", response_model=JobOut, status_code=201)
-def criar_vaga(data: JobIn, user: User = Depends(empresa), db: Session = Depends(get_db)):
+def criar_vaga(data: JobIn, tarefas: BackgroundTasks, user: User = Depends(empresa), db: Session = Depends(get_db)):
     _validar(data, db)
     comp = _company(user, db)
     j = Job(**data.model_dump(), company_id=comp.id)
@@ -190,16 +191,20 @@ def criar_vaga(data: JobIn, user: User = Depends(empresa), db: Session = Depends
     db.add(j)
     db.commit()
     db.refresh(j)
+    if j.status == "aberta":
+        tarefas.add_task(avisar_vaga_nova, j.id)
     return job_out(j)
 
 
 @router.put("/empresa/vagas/{job_id}", response_model=JobOut)
-def editar_vaga(job_id: int, data: JobIn, user: User = Depends(empresa), db: Session = Depends(get_db)):
+def editar_vaga(job_id: int, data: JobIn, tarefas: BackgroundTasks, user: User = Depends(empresa), db: Session = Depends(get_db)):
     comp = _company(user, db)
     j = db.get(Job, job_id)
     if not j or j.company_id != comp.id:
         raise HTTPException(404, "Vaga não encontrada")
     _validar(data, db)
+    if j.status != "aberta" and data.status == "aberta":
+        tarefas.add_task(avisar_vaga_nova, j.id)  # reaberta: avisa (quem já foi avisado não recebe de novo)
     for k, v in data.model_dump().items():
         setattr(j, k, v)
     j.lat, j.lng = coords(data.bairro or data.cidade)
@@ -229,13 +234,17 @@ def candidatos_da_vaga(job_id: int, user: User = Depends(empresa), db: Session =
 
 
 @router.put("/empresa/candidaturas/{app_id}", response_model=ApplicationOut)
-def mudar_status(app_id: int, data: ApplicationStatusIn, user: User = Depends(empresa), db: Session = Depends(get_db)):
+def mudar_status(app_id: int, data: ApplicationStatusIn, tarefas: BackgroundTasks, user: User = Depends(empresa),
+                 db: Session = Depends(get_db)):
     comp = _company(user, db)
     a = db.get(Application, app_id)
     if not a or a.job.company_id != comp.id:
         raise HTTPException(404, "Candidatura não encontrada")
+    mudou = a.status != data.status
     a.status = data.status
     db.commit()
+    if mudou and data.status in ("entrevista", "contratado", "recusada"):
+        tarefas.add_task(avisar_status, a.id)
     o = ApplicationOut.model_validate(a)
     o.vaga, o.empresa = a.job.titulo, comp.razao_social
     return o

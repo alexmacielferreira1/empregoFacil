@@ -201,6 +201,14 @@ export function Perfil() {
     } catch (e2) { setErro(e2.message) }
   }
 
+  async function mudarAvisos(v) {
+    setMsg(''); setErro('')
+    try {
+      const r = await api('/api/candidato/perfil', { method: 'PUT', body: { avisos_whatsapp: v } })
+      setP(r); setMsg(v ? 'Avisos no WhatsApp ligados.' : 'Avisos no WhatsApp desligados.')
+    } catch (e2) { setErro(e2.message) }
+  }
+
   function usarLocalizacao() {
     setMsg(''); setErro('')
     if (!navigator.geolocation) return setErro('Seu celular não informou a localização.')
@@ -232,6 +240,10 @@ export function Perfil() {
           </Campo>
         </div>
         <button type="button" className="secundario largo" onClick={usarLocalizacao}><LocateFixed size={20} />Usar minha localização</button>
+        <div className="card" style={{ margin: 0 }}>
+          <Interruptor checked={!!p.avisos_whatsapp} onChange={mudarAvisos}>Receber avisos no WhatsApp</Interruptor>
+          <p className="quieto" style={{ margin: '.4rem 0 0', fontSize: '.92rem' }}>Vaga nova perto de casa na sua área e novidades das suas candidaturas. No máximo {2} avisos de vaga por dia.</p>
+        </div>
         <Erro msg={erro} />{msg && <p className="sucesso">{msg}</p>}
         <button className="grande">Salvar alterações</button>
       </form>

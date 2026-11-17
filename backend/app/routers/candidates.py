@@ -127,3 +127,19 @@ def meus_cadastrados(user: User = Depends(require_role("parceiro", "admin")), db
         out.append({"id": p.id, "nome": p.nome, "login": p.login, "bairro": prof.bairro if prof else None,
                     "tem_curriculo": bool(prof and prof.resume)})
     return out
+
+
+def nova_senha_provisoria(alvo: User, db: Session) -> dict:
+    senha = f"{secrets.randbelow(10**6):06d}"
+    alvo.password_hash = hash_password(senha)
+    db.commit()
+    return {"id": alvo.id, "nome": alvo.nome, "login": alvo.login, "senha_provisoria": senha}
+
+
+@parceiro_router.post("/candidatos/{user_id}/nova-senha")
+def parceiro_nova_senha(user_id: int, user: User = Depends(require_role("parceiro", "admin")), db: Session = Depends(get_db)):
+    """O parceiro só pode gerar senha nova para quem ele mesmo cadastrou."""
+    alvo = db.get(User, user_id)
+    if not alvo or alvo.role != "candidato" or (user.role != "admin" and alvo.criado_por_id != user.id):
+        raise HTTPException(404, "Pessoa não encontrada entre os seus cadastros")
+    return nova_senha_provisoria(alvo, db)
