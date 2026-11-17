@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../auth'
+import { Mic, Pencil, Printer, Square, Volume2, Check } from 'lucide-react'
 import { Carregando, Erro } from '../components'
 import { falar, pararFala } from '../voz'
 
@@ -44,10 +45,14 @@ export default function Curriculo() {
 
   if (cv === undefined) return erro ? <Erro msg={erro} /> : <Carregando />
   if (!cv) return (
-    <div className="vazio">
-      <h2>Você ainda não tem currículo</h2>
-      <p>Leva uns 5 minutos. É só responder falando.</p>
-      <Link className="botao grande" to="/entrevista">🎤 Começar</Link>
+    <div>
+      <h1>Meu currículo</h1>
+      <div className="vazio-card">
+        <Mic size={44} strokeWidth={1.6} aria-hidden />
+        <h2 style={{ marginTop: '.5rem' }}>Você ainda não tem currículo</h2>
+        <p>Leva uns 5 minutos. É só responder falando.</p>
+        <Link className="botao grande" to="/entrevista"><Mic size={22} />Começar por voz</Link>
+      </div>
     </div>
   )
 
@@ -55,18 +60,17 @@ export default function Curriculo() {
 
   return (
     <div>
+      <h1 className="nao-imprimir">Meu currículo</h1>
       <div className="acoes nao-imprimir">
-        <button onClick={ouvirCv}>{lendo ? '■ Parar' : '🔊 Ouvir meu currículo'}</button>
-        <button className="secundario" onClick={() => setEditando(!editando)}>{editando ? 'Cancelar' : '✏️ Corrigir'}</button>
-        <button className="secundario" onClick={() => window.print()}>🖨️ Salvar PDF</button>
+        <button onClick={ouvirCv}>{lendo ? <><Square size={18} fill="currentColor" />Parar</> : <><Volume2 size={20} />Ouvir</>}</button>
+        <button className="secundario" onClick={() => setEditando(!editando)}><Pencil size={18} />{editando ? 'Cancelar' : 'Corrigir'}</button>
+        <button className="secundario" onClick={() => window.print()}><Printer size={18} />Salvar PDF</button>
+        <Link className="botao secundario" to="/entrevista"><Mic size={18} />Refazer</Link>
       </div>
       {!cv.confirmado && !editando && (
-        <div className="aviso nao-imprimir">
-          <p>Ouça ou leia com calma. Está tudo certo? Só o que você falou entra no currículo.</p>
-          <div className="acoes">
-            <button onClick={() => salvar(true)}>✔ Está certo</button>
-            <Link to="/entrevista" className="botao secundario">Responder de novo</Link>
-          </div>
+        <div className="banner nao-imprimir" style={{ display: 'block' }}>
+          <p style={{ margin: '0 0 .8rem' }}>Ouça ou leia com calma. Está tudo certo? Só o que você falou entra no currículo.</p>
+          <button onClick={() => salvar(true)}><Check size={20} />Está certo</button>
         </div>
       )}
       <Erro msg={erro} />
@@ -115,7 +119,7 @@ export default function Curriculo() {
       </article>
 
       {editando && <div className="acoes"><button className="grande" onClick={() => salvar(true)}>Salvar</button></div>}
-      <p className="quieto nao-imprimir">Feito com {cv.gerado_por === 'ia' ? 'inteligência artificial' : 'o assistente do empregoFacil'}. <Link to="/vagas">Ver vagas para mim →</Link></p>
+      <p className="quieto nao-imprimir" style={{ marginTop: '1rem' }}>Feito com {cv.gerado_por === 'ia' ? 'inteligência artificial' : 'o assistente do empregoFacil'}. <Link to="/vagas">Ver vagas para mim →</Link></p>
     </div>
   )
 }

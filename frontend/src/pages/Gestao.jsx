@@ -32,8 +32,8 @@ export function Parceiro() {
         <button>Cadastrar</button>
       </form>
       {criado && (
-        <div className="destaque-box ok">
-          <p>✔ {criado.nome} cadastrada.</p>
+        <div className="caixa-destaque ok">
+          <p className="sucesso">{criado.nome} foi cadastrada.</p>
           <p>Login: <b>{criado.login}</b> · Senha provisória: <b>{criado.senha_provisoria}</b></p>
           <p className="quieto">Anote e entregue para a pessoa. Ela pode trocar depois.</p>
         </div>
@@ -68,7 +68,7 @@ export function Admin() {
   )
 }
 
-const CURSO_VAZIO = { titulo: '', ofertante: '', categoria: '', descricao: '', modalidade: 'presencial', preco: 0, carga_horaria: '', certificado: true, bairro: '', horario: '', link: '', contato: '' }
+const CURSO_VAZIO = { titulo: '', ofertante: '', categoria: '', descricao: '', modalidade: 'presencial', preco: 0, carga_horaria: '', certificado: true, bairro: '', horario: '', link: '', imagem_url: '', contato: '' }
 
 export function AdminCursos() {
   const [lista, setLista] = useState(null)
@@ -109,6 +109,7 @@ export function AdminCursos() {
         <Campo label="Dias e horário"><input value={f.horario} onChange={set('horario')} /></Campo>
         <Campo label="Link de inscrição"><input value={f.link} onChange={set('link')} type="url" /></Campo>
         <Campo label="Contato"><input value={f.contato} onChange={set('contato')} /></Campo>
+        <Campo label="Foto (link da imagem, opcional)" dica="Sem link, usa a foto da área em /img/cursos/<area>.jpg"><input value={f.imagem_url} onChange={set('imagem_url')} type="url" /></Campo>
         <Campo label="Descrição"><textarea value={f.descricao} onChange={set('descricao')} /></Campo>
         <label className="check"><input type="checkbox" checked={f.certificado} onChange={set('certificado')} /> Dá certificado</label>
         <Erro msg={erro} />
@@ -118,7 +119,7 @@ export function AdminCursos() {
         <table className="tabela"><thead><tr><th>Curso</th><th>Preço</th><th></th></tr></thead>
           <tbody>{lista.map((c) => (
             <tr key={c.id}><td>{c.titulo}<br /><span className="quieto">{c.ofertante}{c.exemplo ? ' · exemplo' : ''}</span></td><td>{brl(c.preco)}</td>
-              <td><button className="link" onClick={() => { setEditId(c.id); setF({ ...CURSO_VAZIO, ...c, carga_horaria: c.carga_horaria || '', bairro: c.bairro || '', link: c.link || '', contato: c.contato || '', horario: c.horario || '', descricao: c.descricao || '' }); window.scrollTo(0, 0) }}>Editar</button>{' '}
+              <td><button className="link" onClick={() => { setEditId(c.id); setF({ ...CURSO_VAZIO, ...c, carga_horaria: c.carga_horaria || '', bairro: c.bairro || '', link: c.link || '', imagem_url: c.imagem_url || '', contato: c.contato || '', horario: c.horario || '', descricao: c.descricao || '' }); window.scrollTo(0, 0) }}>Editar</button>{' '}
                 <button className="link" onClick={() => remover(c.id)}>Remover</button></td></tr>
           ))}</tbody></table>
       )}

@@ -1,11 +1,11 @@
 {
-  "name": "empregoFacil",
-  "short_name": "empregoFacil",
+  "name": "Emprego Fácil",
+  "short_name": "Emprego Fácil",
   "description": "Currículo por voz, cursos e vagas perto de casa",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0f766e",
+  "background_color": "#f6f5f1",
+  "theme_color": "#0d3d6b",
   "lang": "pt-BR",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
 }

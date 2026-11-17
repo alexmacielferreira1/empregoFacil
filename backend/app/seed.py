@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.config import get_settings
 from app.geo import coords
 from app.models import CandidateProfile, Company, Course, Job, User
-from app.security import hash_password
+from app.security import hash_password, verify_password
 
 CURSOS = [
     ("Corte e costura básico", "Oficina comunitária (exemplo)", "costura", "presencial", 0, 40, "Lomba do Pinheiro", "Sábados, 9h às 12h"),
@@ -38,8 +38,13 @@ VAGAS = [
 
 def seed(db: Session) -> None:
     s = get_settings()
-    if not db.scalar(select(User).where(User.login == s.admin_login.lower())):
+    admin = db.scalar(select(User).where(User.login == s.admin_login.lower()))
+    if not admin:
         db.add(User(login=s.admin_login.lower(), password_hash=hash_password(s.admin_password), role="admin", nome="Administrador"))
+        db.commit()
+    elif admin.role == "admin" and not verify_password(s.admin_password, admin.password_hash):
+        # ADMIN_PASSWORD é a fonte da verdade: trocar a variável e reiniciar troca a senha do admin
+        admin.password_hash = hash_password(s.admin_password)
         db.commit()
 
     if not s.seed_demo or db.scalar(select(Course).where(Course.exemplo.is_(True))):

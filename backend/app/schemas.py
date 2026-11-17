@@ -102,6 +102,7 @@ class CourseIn(BaseModel):
     bairro: str | None = None
     horario: str | None = None
     link: str | None = None
+    imagem_url: str | None = None
     contato: str | None = None
 
 
@@ -119,6 +120,7 @@ class CourseOut(Orm):
     bairro: str | None
     horario: str | None
     link: str | None
+    imagem_url: str | None = None
     contato: str | None
     exemplo: bool
     distancia_km: float | None = None

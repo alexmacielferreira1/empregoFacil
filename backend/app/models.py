@@ -95,6 +95,7 @@ class Course(Base):
     lng: Mapped[float | None] = mapped_column(Float, nullable=True)
     horario: Mapped[str | None] = mapped_column(String(120), nullable=True)
     link: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    imagem_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     contato: Mapped[str | None] = mapped_column(String(160), nullable=True)
     exemplo: Mapped[bool] = mapped_column(Boolean, default=False)
     ativo: Mapped[bool] = mapped_column(Boolean, default=True)

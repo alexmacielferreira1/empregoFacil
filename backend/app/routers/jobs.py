@@ -56,12 +56,14 @@ def vagas_para_mim(
     sem_experiencia: bool | None = None,
     raio_km: float | None = None,
     busca: str | None = None,
+    bairro: str | None = None,
     lat: float | None = None,
     lng: float | None = None,
     user: User = Depends(require_role("candidato")),
     db: Session = Depends(get_db),
 ):
-    return _listar(db, user, categoria, com_treinamento, sem_experiencia, raio_km, busca, None, lat, lng)
+    """Sem bairro/lat: distância a partir do perfil. Com bairro: a partir do bairro escolhido."""
+    return _listar(db, user, categoria, com_treinamento, sem_experiencia, raio_km, busca, bairro, lat, lng)
 
 
 def _listar(db, user, categoria, com_treinamento, sem_experiencia, raio_km, busca, bairro, lat, lng):

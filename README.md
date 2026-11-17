@@ -17,6 +17,10 @@ Stack (padrão da Base SaaS V1): **FastAPI + SQLAlchemy + PostgreSQL + Redis + R
 
 **IA:** com `ANTHROPIC_API_KEY` o currículo é escrito pelo Claude. Sem chave, um gerador por regras (grátis) traduz a experiência ("limpava casa de família" → "Auxiliar de Limpeza"). Os dois só usam o que a pessoa falou.
 
+**Fotos dos cursos:** coloque em `frontend/public/img/cursos/` um `.jpg` por área (`costura.jpg`, `construcao.jpg`, `comercio.jpg`…; lista completa no `LEIA-ME.txt` da pasta) e rode o build. Sem foto, o card mostra o ícone da área. Cada curso também aceita foto própria (campo "Foto" no admin).
+
+**Senha do admin:** vem da variável `ADMIN_PASSWORD`. Trocou a variável e reiniciou, a senha muda.
+
 **Distância:** usa o centro aproximado de ~30 bairros/cidades da Grande Porto Alegre (`backend/app/geo.py`) ou a localização do celular, se a pessoa permitir.
 
 ## Rodar no PC

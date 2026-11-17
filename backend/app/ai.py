@@ -32,13 +32,16 @@ CATEGORIAS: dict[str, str] = {
     "outros": "Outros",
 }
 
+_PERGUNTAS_BASE: list[tuple[str, str, str]] = [
+    ("ultimo_trabalho", "Como era seu último trabalho?", "O que você fazia no dia a dia?"),
+    ("tempo_local", "Quanto tempo você trabalhou nisso?", "E onde foi: casa de família, empresa ou por conta própria?"),
+    ("outros_trabalhos", "Já fez outros trabalhos?", "Bico e trabalho sem carteira também contam. Pode contar todos."),
+    ("habilidades", "O que você sabe fazer bem?", "Cozinhar, consertar, cuidar de pessoas, vender, organizar…"),
+    ("estudos", "Até que série você estudou?", "Já fez algum curso?"),
+    ("objetivo", "Que trabalho você procura agora?", "E em que dias e horários você pode trabalhar?"),
+]
 PERGUNTAS: list[dict[str, str]] = [
-    {"id": "ultimo_trabalho", "texto": "Me conta sobre o último trabalho que você fez. O que você fazia no dia a dia?"},
-    {"id": "tempo_local", "texto": "Quanto tempo você trabalhou nisso? E onde foi: em casa de família, empresa, por conta própria?"},
-    {"id": "outros_trabalhos", "texto": "Você já fez outros trabalhos, mesmo bico ou sem carteira assinada? Pode contar todos."},
-    {"id": "habilidades", "texto": "O que você sabe fazer bem? Pode ser qualquer coisa: cozinhar, consertar, cuidar de pessoas, vender, organizar."},
-    {"id": "estudos", "texto": "Até que série você estudou? Já fez algum curso?"},
-    {"id": "objetivo", "texto": "Que tipo de trabalho você procura agora? E em que dias e horários você pode trabalhar?"},
+    {"id": i, "titulo": t, "detalhe": d, "texto": f"{t} {d}"} for i, t, d in _PERGUNTAS_BASE
 ]
 
 # palavra-chave -> (categoria, cargo profissional)

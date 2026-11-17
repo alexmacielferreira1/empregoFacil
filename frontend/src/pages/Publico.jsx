@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
 import { homeDe, useAuth } from '../auth'
+import { Building2, GraduationCap, Briefcase, Mic } from 'lucide-react'
 import { Campo, Erro, SelectLocal } from '../components'
 
 export function Home() {
@@ -10,14 +11,14 @@ export function Home() {
       <section className="hero">
         <h1>Seu currículo pronto <span>só falando</span>.</h1>
         <p>Conte o que você já fez. A gente transforma em currículo, mostra cursos baratos e vagas perto da sua casa.</p>
-        <Link to="/cadastro?tipo=candidato" className="botao grande">🎤 Quero trabalhar</Link>
-        <Link to="/cadastro?tipo=empresa" className="botao grande secundario">🏢 Sou empresa e quero contratar</Link>
+        <Link to="/cadastro?tipo=candidato" className="botao grande"><Mic size={22} />Quero trabalhar</Link>
+        <Link to="/cadastro?tipo=empresa" className="botao grande secundario"><Building2 size={22} />Sou empresa e quero contratar</Link>
         <p className="quieto">Já tem conta? <Link to="/entrar">Entrar</Link></p>
       </section>
       <section className="passos">
-        <div><b>1. Fale</b><p>Responda perguntas simples com sua voz. Bico e trabalho sem carteira também contam.</p></div>
-        <div><b>2. Aprenda</b><p>Cursos grátis ou baratos, presenciais ou online, perto de você.</p></div>
-        <div><b>3. Trabalhe</b><p>Vagas perto de casa, inclusive em empresas que treinam você.</p></div>
+        <div className="passo"><div className="icone-area"><Mic size={28} /></div><div><b>1. Fale</b><p>Responda perguntas simples com sua voz. Bico e trabalho sem carteira também contam.</p></div></div>
+        <div className="passo"><div className="icone-area"><GraduationCap size={28} /></div><div><b>2. Aprenda</b><p>Cursos grátis ou baratos, presenciais ou online, perto de você.</p></div></div>
+        <div className="passo"><div className="icone-area"><Briefcase size={28} /></div><div><b>3. Trabalhe</b><p>Vagas perto de casa, inclusive em empresas que treinam você.</p></div></div>
       </section>
       <p className="centro"><Link to="/vagas">Ver vagas</Link> · <Link to="/cursos">Ver cursos</Link> · <Link to="/cadastro?tipo=parceiro">Sou associação / ONG</Link></p>
     </div>
@@ -94,7 +95,7 @@ export function Cadastro() {
       {cand && (
         <label className="check">
           <input type="checkbox" checked={f.consentimento_lgpd} onChange={set('consentimento_lgpd')} />
-          <span>Autorizo o empregoFacil a guardar o que eu falar para montar meu currículo e mostrar para empresas quando eu me candidatar. Meu endereço exato nunca é mostrado.</span>
+          <span>Autorizo o Emprego Fácil a guardar o que eu falar para montar meu currículo e mostrar para empresas quando eu me candidatar. Meu endereço exato nunca é mostrado.</span>
         </label>
       )}
       <Erro msg={erro} />

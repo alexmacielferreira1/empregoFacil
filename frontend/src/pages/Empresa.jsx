@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../auth'
+import { Plus, Users } from 'lucide-react'
 import { Campo, Carregando, Erro, SelectCategoria, SelectLocal, Selo } from '../components'
 
 export function EmpresaVagas() {
@@ -10,16 +11,16 @@ export function EmpresaVagas() {
   useEffect(() => { api('/api/empresa/vagas').then(setVagas).catch((e) => setErro(e.message)) }, [])
   return (
     <div>
-      <div className="card-topo"><h1>Minhas vagas</h1><Link to="/empresa/nova" className="botao">+ Nova vaga</Link></div>
+      <div className="card-topo"><h1>Minhas vagas</h1><Link to="/empresa/nova" className="botao"><Plus size={20} />Nova vaga</Link></div>
       <Erro msg={erro} />
       {vagas === null ? <Carregando /> : vagas.length === 0 ? (
         <div className="vazio"><p>Publique sua primeira vaga. Marque "treinamos você" para atrair quem ainda não tem experiência.</p></div>
       ) : vagas.map((v) => (
         <article className="card" key={v.id}>
           <div className="card-topo"><h3>{v.titulo}</h3><Selo tipo={v.status === 'aberta' ? 'bom' : ''}>{v.status}</Selo></div>
-          <p className="quieto">{v.bairro || v.cidade}{v.com_treinamento ? ' · 🎓 com treinamento' : ''}</p>
+          <p className="quieto">{v.bairro || v.cidade}{v.com_treinamento ? ' · com treinamento' : ''}</p>
           <div className="acoes">
-            <Link className="botao" to={`/empresa/vagas/${v.id}`}>👥 {v.total_candidatos} candidato(s)</Link>
+            <Link className="botao" to={`/empresa/vagas/${v.id}`}><Users size={18} />{v.total_candidatos} candidato(s)</Link>
             <Link className="botao secundario" to={`/empresa/vagas/${v.id}/editar`}>Editar</Link>
           </div>
         </article>
@@ -67,14 +68,14 @@ export function VagaForm() {
       <Campo label="Horário"><input value={f.horario || ''} onChange={set('horario')} placeholder="Ex.: Seg a sex, 8h às 17h" /></Campo>
       <Campo label="Onde é o trabalho"><SelectLocal value={f.bairro} onChange={(v) => setF({ ...f, bairro: v })} vazio="Bairro ou cidade" /></Campo>
       <Campo label="Vantagens">
-        <div className="selos">{meta.vantagens.map((v) => (
+        <div className="chips">{meta.vantagens.map((v) => (
           <button type="button" key={v} className={`chip ${f.vantagens.includes(v) ? 'ativa' : ''}`} onClick={() => toggleVantagem(v)}>{v}</button>
         ))}</div>
       </Campo>
       <label className="check"><input type="checkbox" checked={f.exige_experiencia} onChange={set('exige_experiencia')} /> Exige experiência</label>
 
-      <div className="destaque-box">
-        <label className="check"><input type="checkbox" checked={f.com_treinamento} onChange={set('com_treinamento')} /> <b>🎓 Treinamos a pessoa</b></label>
+      <div className="caixa-destaque">
+        <label className="check"><input type="checkbox" checked={f.com_treinamento} onChange={set('com_treinamento')} /> <b>Treinamos a pessoa</b></label>
         {f.com_treinamento && <>
           <Campo label="Quando é o treinamento">
             <select value={f.tipo_treinamento || 'junto'} onChange={set('tipo_treinamento')}>
@@ -124,10 +125,10 @@ export function Candidatos() {
       <Erro msg={erro} />
       {lista === null ? <Carregando /> : lista.length === 0 ? <p className="quieto">Ninguém se candidatou ainda.</p> : lista.map((c) => (
         <article className="card" key={c.application_id}>
-          <div className="card-topo"><h3>{c.nome}</h3>{c.distancia_km != null && <span className="distancia">📍 {c.distancia_km < 1 ? "Mesmo bairro" : `${c.distancia_km} km`}</span>}</div>
+          <div className="card-topo"><h3>{c.nome}</h3>{c.distancia_km != null && <span className="distancia">{c.distancia_km < 1 ? "Mesmo bairro" : `${c.distancia_km} km`}</span>}</div>
           <p className="quieto">{c.bairro} · {c.telefone && <a href={`https://wa.me/55${c.telefone}`} target="_blank" rel="noreferrer">WhatsApp {c.telefone}</a>}</p>
           {c.curriculo?.objetivo && <p>{c.curriculo.objetivo}</p>}
-          {c.mensagem && <p>💬 “{c.mensagem}”</p>}
+          {c.mensagem && <p>“{c.mensagem}”</p>}
           {aberto === c.application_id && c.curriculo && (
             <div className="detalhe">
               <p>{c.curriculo.resumo}</p>

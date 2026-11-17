@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
@@ -15,10 +16,28 @@ settings = get_settings()
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"  # build do React (frontend/dist)
 
 
+def adicionar_colunas_novas() -> None:
+    """Migração leve do MVP: cria colunas que o modelo tem e o banco ainda não.
+
+    Só ADICIONA colunas que aceitam nulo (nunca remove nem altera). Ao estabilizar o
+    modelo, trocar por Alembic (padrão da Base).
+    """
+    insp = inspect(engine)
+    with engine.begin() as conn:
+        for tabela in Base.metadata.sorted_tables:
+            if not insp.has_table(tabela.name):
+                continue
+            existentes = {c["name"] for c in insp.get_columns(tabela.name)}
+            for col in tabela.columns:
+                if col.name not in existentes and col.nullable:
+                    tipo = col.type.compile(dialect=engine.dialect)
+                    conn.execute(text(f'ALTER TABLE {tabela.name} ADD COLUMN {col.name} {tipo}'))
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # MVP: cria as tabelas direto. Ao estabilizar o modelo, migrar para Alembic (padrão da Base).
     Base.metadata.create_all(engine)
+    adicionar_colunas_novas()
     with SessionLocal() as db:
         seed(db)
     yield
@@ -48,6 +67,8 @@ def spa(full_path: str):
     arquivo = STATIC_DIR / full_path
     if full_path and arquivo.is_file() and STATIC_DIR in arquivo.resolve().parents:
         return FileResponse(arquivo)
+    if "." in full_path.rsplit("/", 1)[-1]:  # arquivo (imagem etc.) que não existe -> 404, não o app
+        return JSONResponse({"detail": "Arquivo não encontrado"}, status_code=404)
     index = STATIC_DIR / "index.html"
     if index.exists():
         return FileResponse(index)

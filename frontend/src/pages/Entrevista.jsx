@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, Mic, Square, Volume2 } from 'lucide-react'
 import { api } from '../api'
 import { Carregando, Erro } from '../components'
 import { falar, ouvir, pararFala, temReconhecimento } from '../voz'
@@ -39,7 +40,6 @@ export default function Entrevista() {
   }
 
   function parar() { rec.current?.parar(); rec.current = null; setGravando(false); setParcial('') }
-
   function ir(delta) { parar(); setI((x) => Math.min(Math.max(x + delta, 0), perguntas.length - 1)) }
 
   async function gerar() {
@@ -53,40 +53,51 @@ export default function Entrevista() {
   if (!perguntas.length) return erro ? <Erro msg={erro} /> : <Carregando />
   const ultima = i === perguntas.length - 1
   const respondidas = perguntas.filter((p) => (respostas[p.id] || '').trim()).length
+  const temResposta = (respostas[atual.id] || '').trim()
 
   return (
     <div className="entrevista">
-      <p className="quieto">Pergunta {i + 1} de {perguntas.length}</p>
-      <div className="barra"><div style={{ width: `${((i + 1) / perguntas.length) * 100}%` }} /></div>
-      <h2 className="pergunta">{atual.texto}</h2>
-      <button className="link" onClick={() => falar(atual.texto)}>🔊 Ouvir a pergunta de novo</button>
-
-      <div className="microfone">
-        {temReconhecimento ? (
-          <button className={`mic ${gravando ? 'gravando' : ''}`} onClick={gravando ? parar : comecar} aria-label={gravando ? 'Parar de gravar' : 'Falar resposta'}>
-            {gravando ? '■' : '🎤'}
-          </button>
-        ) : (
-          <p className="aviso">Seu navegador não reconhece voz aqui. Toque na caixa abaixo e use o 🎤 do teclado do celular.</p>
-        )}
-        <p className="quieto">{gravando ? 'Estou ouvindo… toque para parar.' : 'Toque no microfone e fale à vontade.'}</p>
+      <h1>Currículo por voz</h1>
+      <p style={{ margin: 0 }}>Pergunta {i + 1} de {perguntas.length}</p>
+      <div className="barra" role="progressbar" aria-valuemin={1} aria-valuemax={perguntas.length} aria-valuenow={i + 1}>
+        <div style={{ width: `${((i + 1) / perguntas.length) * 100}%` }} />
       </div>
 
-      <textarea
-        rows={5}
-        value={(respostas[atual.id] || '') + (parcial ? ' ' + parcial : '')}
-        onChange={(e) => setRespostas({ ...respostas, [atual.id]: e.target.value })}
-        placeholder="Sua resposta aparece aqui. Você pode corrigir digitando."
-      />
+      <h2 className="pergunta">{atual.titulo || atual.texto}</h2>
+      {atual.detalhe && <p className="pergunta-detalhe">{atual.detalhe}</p>}
+      <div className="centro"><button className="pilula" onClick={() => falar(atual.texto)}><Volume2 size={20} />Ouvir pergunta</button></div>
+
+      <div className="painel-mic">
+        {temReconhecimento ? (
+          <>
+            <button className={`mic ${gravando ? 'gravando' : ''}`} onClick={gravando ? parar : comecar} aria-label={gravando ? 'Parar de gravar' : 'Gravar resposta'}>
+              {gravando ? <Square size={36} fill="currentColor" /> : <Mic size={46} strokeWidth={2} />}
+            </button>
+            <p className="rotulo">{gravando ? 'Ouvindo… toque para parar' : 'Gravar resposta'}</p>
+          </>
+        ) : (
+          <p style={{ margin: 0 }}>Este navegador não reconhece voz. Toque na caixa abaixo e use o <b>microfone do teclado</b> do celular.</p>
+        )}
+      </div>
+
+      <label className="campo">
+        <span>Ou digite sua resposta</span>
+        <textarea
+          rows={4}
+          value={(respostas[atual.id] || '') + (parcial ? ' ' + parcial : '')}
+          onChange={(e) => setRespostas({ ...respostas, [atual.id]: e.target.value })}
+          placeholder="Descreva aqui suas atividades…"
+        />
+      </label>
       <Erro msg={erro} />
 
-      <div className="acoes">
-        <button className="secundario" onClick={() => ir(-1)} disabled={i === 0}>Voltar</button>
-        {!ultima && <button onClick={() => ir(1)}>{(respostas[atual.id] || '').trim() ? 'Próxima' : 'Pular'}</button>}
-        {ultima && <button onClick={gerar} disabled={gerando || respondidas === 0}>{gerando ? 'Montando seu currículo…' : '✨ Montar meu currículo'}</button>}
+      <div className="acoes" style={{ marginTop: '1rem', flexWrap: 'nowrap' }}>
+        {i > 0 && <button className="secundario" onClick={() => ir(-1)} aria-label="Pergunta anterior"><ArrowLeft size={20} /></button>}
+        {!ultima && <button className="grande" style={{ flex: 1 }} onClick={() => ir(1)}>{temResposta ? 'Próxima' : 'Pular'} <ArrowRight size={22} /></button>}
+        {ultima && <button className="grande" style={{ flex: 1 }} onClick={gerar} disabled={gerando || respondidas === 0}>{gerando ? 'Montando seu currículo…' : 'Montar meu currículo'}</button>}
       </div>
       {!ultima && respondidas >= 2 && (
-        <button className="link" onClick={gerar} disabled={gerando}>Já respondi o suficiente, montar agora</button>
+        <p className="centro"><button className="link" onClick={gerar} disabled={gerando}>Montar currículo agora</button></p>
       )}
     </div>
   )

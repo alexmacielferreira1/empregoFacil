@@ -1,0 +1,10 @@
+Fotos dos cursos por área. Coloque aqui um .jpg com o nome exato da área:
+
+  limpeza.jpg        construcao.jpg     costura.jpg       cozinha.jpg
+  cuidados.jpg       comercio.jpg       logistica.jpg     beleza.jpg
+  manutencao.jpg     jardinagem.jpg     administrativo.jpg  outros.jpg
+
+Tamanho sugerido: 800 x 320 px (paisagem), até ~120 KB cada.
+Sem a foto, o card mostra um fundo amarelo com o ícone da área.
+Um curso também pode ter foto própria (campo "Foto" no cadastro de cursos do admin).
+Depois de colocar as fotos, rode o build (build.ps1 / build.sh) e faça o commit.
