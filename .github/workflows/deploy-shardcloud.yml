@@ -35,11 +35,23 @@ jobs:
           rm -rf backend/tests backend/Dockerfile
           find backend -name "__pycache__" -type d -prune -exec rm -rf {} +
 
-      - name: Enviar para a ShardCloud
-        uses: shard-cloud/action@main
-        with:
-          token: ${{ secrets.SHARD_CLOUD_API_KEY }}
-          workdir: ./backend
-          commands: |
-            app commit ${{ env.APP_ID }}
-            app restart ${{ env.APP_ID }}
+      # Instala a CLI direto (a action oficial consulta o GitHub sem token e cai no limite: erro 403)
+      - name: Instalar a CLI da ShardCloud
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh release view --repo shard-cloud/cli --json tagName -q .tagName)
+          echo "CLI da ShardCloud: $TAG"
+          curl -fsSL -o /tmp/shardcloud.tar.gz "https://github.com/shard-cloud/cli/releases/download/${TAG}/shardcloud_linux_amd64.tar.gz"
+          mkdir -p /tmp/shardcloud && tar -xzf /tmp/shardcloud.tar.gz -C /tmp/shardcloud
+          BIN=$(find /tmp/shardcloud -type f -name 'shardcloud*' | head -1)
+          chmod +x "$BIN" && sudo mv "$BIN" /usr/local/bin/shardcloud
+
+      - name: Enviar para a ShardCloud e reiniciar
+        working-directory: ./backend
+        env:
+          SHARD_TOKEN: ${{ secrets.SHARD_CLOUD_API_KEY }}
+        run: |
+          shardcloud auth login --token "$SHARD_TOKEN"
+          shardcloud app commit "$APP_ID"
+          shardcloud app restart "$APP_ID"
