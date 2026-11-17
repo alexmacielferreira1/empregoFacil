@@ -52,13 +52,28 @@ Testes: `cd backend && pip install pytest && python -m pytest -q`
 
 Cursos e vagas de demonstração aparecem com o selo **Exemplo**.
 
-## Subir no GitHub
+## GitHub
+
+Repositório: https://github.com/alexmacielferreira1/empregoFacil
+
+Baixar no PC (primeira vez):
 ```bash
-git init && git add . && git commit -m "empregoFacil: primeira versão"
-git branch -M main
-git remote add origin https://github.com/SEU_USUARIO/empregoFacil.git
-git push -u origin main
+git clone https://github.com/alexmacielferreira1/empregoFacil.git
+cd empregoFacil
 ```
+
+Mandar alterações:
+```bash
+git add .
+git commit -m "descreva o que mudou"
+git push
+```
+
+Puxar alterações feitas em outro lugar:
+```bash
+git pull
+```
+
 O `backend/static` (React já compilado) vai junto de propósito, para a ShardCloud rodar sem precisar de Node. Depois de mudar o frontend, rode o build de novo antes do commit.
 
 ## Publicar na ShardCloud
