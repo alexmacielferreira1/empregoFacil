@@ -51,6 +51,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def controle_de_cache(request, call_next):
+    """API nunca fica em cache (vagas e status mudam a toda hora). Arquivos com hash no nome: cache longo."""
+    resposta = await call_next(request)
+    caminho = request.url.path
+    if caminho.startswith("/api/"):
+        resposta.headers["Cache-Control"] = "no-store"
+    elif caminho.startswith("/assets/"):
+        resposta.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    else:  # index.html e demais arquivos: sempre conferir se há versão nova
+        resposta.headers["Cache-Control"] = "no-cache"
+    return resposta
+
+
 for r in (auth.router, candidates.router, candidates.parceiro_router, courses.router, jobs.router, admin.router):
     app.include_router(r)
 
